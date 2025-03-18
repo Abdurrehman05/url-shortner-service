@@ -1,6 +1,8 @@
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+from rest_framework.test import APITestCase
+from rest_framework import status
 from .models import URL
 
 class URLModelTests(TestCase):
@@ -64,7 +66,97 @@ class URLModelTests(TestCase):
             url = URL(long_url=long_url, short_url='xyz789')
             url.full_clean()
 
+class URLAPITests(APITestCase):
+    def setUp(self):
+        """Set up test data"""
+        self.valid_url = URL.objects.create(
+            long_url='https://www.example.com',
+            short_url='abc123'
+        )
+        self.api_url = '/api/urls/'
+
+    def test_create_url(self):
+        """Test creating a new URL through API"""
+        data = {'long_url': 'https://www.test.com'}
+        response = self.client.post(self.api_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn('short_url', response.data)
+        self.assertEqual(response.data['long_url'], 'https://www.test.com')
+        self.assertTrue(response.data['is_active'])
+
+    def test_create_invalid_url(self):
+        """Test creating a URL with invalid data"""
+        data = {'long_url': 'not-a-valid-url'}
+        response = self.client.post(self.api_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_retrieve_url(self):
+        """Test retrieving a URL's details"""
+        response = self.client.get(f'{self.api_url}{self.valid_url.short_url}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['long_url'], 'https://www.example.com')
+        self.assertEqual(response.data['access_count'], 1)  # Count increments on retrieve
+
+    def test_retrieve_nonexistent_url(self):
+        """Test retrieving a non-existent URL"""
+        response = self.client.get(f'{self.api_url}nonexistent/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_deactivate_url(self):
+        """Test deactivating a URL"""
+        response = self.client.post(f'{self.api_url}{self.valid_url.short_url}/deactivate/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Verify URL is deactivated
+        self.valid_url.refresh_from_db()
+        self.assertFalse(self.valid_url.is_active)
+
         # Test short_url max length (10 characters)
         with self.assertRaises(ValidationError):
             url = URL(long_url='https://example.com', short_url='a' * 11)
             url.full_clean()
+
+class URLAPITests(APITestCase):
+    def setUp(self):
+        """Set up test data"""
+        self.valid_url = URL.objects.create(
+            long_url='https://www.example.com',
+            short_url='abc123'
+        )
+        self.api_url = '/api/urls/'
+
+    def test_create_url(self):
+        """Test creating a new URL through API"""
+        data = {'long_url': 'https://www.test.com'}
+        response = self.client.post(self.api_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn('short_url', response.data)
+        self.assertEqual(response.data['long_url'], 'https://www.test.com')
+        self.assertTrue(response.data['is_active'])
+
+    def test_create_invalid_url(self):
+        """Test creating a URL with invalid data"""
+        data = {'long_url': 'not-a-valid-url'}
+        response = self.client.post(self.api_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_retrieve_url(self):
+        """Test retrieving a URL's details"""
+        response = self.client.get(f'{self.api_url}{self.valid_url.short_url}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['long_url'], 'https://www.example.com')
+        self.assertEqual(response.data['access_count'], 1)  # Count increments on retrieve
+
+    def test_retrieve_nonexistent_url(self):
+        """Test retrieving a non-existent URL"""
+        response = self.client.get(f'{self.api_url}nonexistent/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_deactivate_url(self):
+        """Test deactivating a URL"""
+        response = self.client.post(f'{self.api_url}{self.valid_url.short_url}/deactivate/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Verify URL is deactivated
+        self.valid_url.refresh_from_db()
+        self.assertFalse(self.valid_url.is_active)
