@@ -137,6 +137,77 @@ A Django-based URL shortener service that converts long URLs into short, managea
 7. Write tests
 8. Deploy and monitor
 
+## Project Structure
+
+### Directory Layout
+```
+urlshortener/
+├── manage.py
+├── requirements.txt
+├── README.md
+├── .env
+├── .gitignore
+└── urlshortener/
+    ├── __init__.py
+    ├── settings.py
+    ├── urls.py
+    ├── wsgi.py
+    └── core/
+        ├── __init__.py
+        ├── admin.py
+        ├── apps.py
+        ├── models.py          # URL and analytics models
+        ├── serializers.py     # DRF serializers
+        ├── services/
+        │   ├── __init__.py
+        │   ├── shortener.py   # URL shortening logic
+        │   └── analytics.py   # Analytics processing
+        ├── views/
+        │   ├── __init__.py
+        │   ├── api.py         # API endpoints
+        │   └── redirect.py    # URL redirection views
+        ├── tests/
+        │   ├── __init__.py
+        │   ├── test_models.py
+        │   ├── test_views.py
+        │   └── test_services.py
+        ├── migrations/        # Database migrations
+        ├── templates/
+        │   └── core/          # HTML templates if needed
+        ├── static/
+        │   └── core/
+        │       ├── css/       # Stylesheets
+        │       └── js/        # JavaScript files
+        └── utils/             # Helper functions and utilities
+```
+
+### Key Directories
+
+#### Core Application
+- `core/models.py`: Contains URL and analytics models
+- `core/serializers.py`: DRF serializers for API responses
+- `core/views/`: Separated views for better organization
+  - `api.py`: API endpoints using DRF
+  - `redirect.py`: URL redirection logic
+
+#### Business Logic
+- `core/services/`: Contains core business logic
+  - `shortener.py`: URL shortening implementation
+  - `analytics.py`: Analytics processing logic
+
+#### Testing
+- `core/tests/`: Organized test files by component
+  - Unit tests for models, views, and services
+  - Integration tests for complete workflows
+
+#### Assets and Templates
+- `core/static/`: Static files (CSS, JavaScript)
+- `core/templates/`: HTML templates if needed
+
+#### Support Files
+- `migrations/`: Database migration files
+- `utils/`: Helper functions and utilities
+
 ## Future Enhancements
 - Custom short URL support
 - User authentication
