@@ -1,11 +1,21 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
+from django.http import Http404
 from .models import URL
 from .serializers import URLSerializer
 import string
 import random
+
+def redirect_url(request, short_url):
+    """Redirect to the original URL from a short URL"""
+    try:
+        url = URL.objects.get(short_url=short_url, is_active=True)
+        url.increment_access_count()
+        return redirect(url.long_url)
+    except URL.DoesNotExist:
+        raise Http404("Short URL not found or inactive")
 
 class URLViewSet(viewsets.ModelViewSet):
     queryset = URL.objects.all()

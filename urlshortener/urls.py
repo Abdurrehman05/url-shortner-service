@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from core.views import URLViewSet
+from core.views import URLViewSet, redirect_url
 
 router = DefaultRouter()
 router.register(r'urls', URLViewSet, basename='url')
@@ -25,4 +25,5 @@ router.register(r'urls', URLViewSet, basename='url')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+    path('<str:short_url>/', redirect_url, name='redirect-url'),
 ]
